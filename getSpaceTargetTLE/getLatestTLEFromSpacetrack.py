@@ -37,7 +37,7 @@ record_log = True  # 记录日志信息
 
 if __name__ == "__main__":
     """
-    SpaceTrack描述轨道信息采用数据格式：TLE、3LE、OMM、GP_、GP_history
+    SpaceTrack描述轨道信息采用数据格式：TLE、3LE、OMM、GP
     随着编目增多，TLE越来越难以满足需求，18SDS未来将主要提供GP格式数据
     """
 
@@ -97,18 +97,7 @@ if __name__ == "__main__":
             else:
                 gp[feature] = string_expect
             strings_expect.append(gp[feature])
-        # 写入对应xls表格
-        save_file = os.path.join(save_dir, str(f'GP_ID_{gp["GP_ID"]}.xlsx'))
-        if os.path.exists(save_file):  # 存在，添加最新数据
-            # 读取历史数据，比较CREATION_DATE
-            data_frames = pd.read_excel(save_file)
-            if data_frames.loc(len(data_frames))['CREATION_DATE'] == gp['CREATION_DATE']:  # 一致,不添加数据
-                pass
-            else:  # 不一致，添加数据
-                with ExcelWriter(save_file, mode="a", engine="openpyxl") as writer:
-                    df_to_write = pd.DataFrame(data=[strings_expect], columns=features)
-                    df_to_write.to_excel(writer, sheet_name="Sheet3")
+        save_file = os.path.join(save_dir, str(f'GP_ID_{gp["GP_ID"]}.csv'))
+        gp.csv(save_file=save_file)
+        print('结束。。。')
 
-        else:  # 不存在，创建表格，并添加数据
-            df_to_write_ = pd.DataFrame(data=[strings_expect], columns=features)
-            df_to_write_.to_excel(save_file)

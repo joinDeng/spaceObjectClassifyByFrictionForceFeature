@@ -130,21 +130,55 @@ class GeneralPerturbations():
 
         return data
 
-    def kvn(self, show_all=False):
-        pass
-        return True
+    def csv(self, save_file):
+        # 写入对应xls表格
+        strings_expect = []
+        for i, feature in enumerate(features):
+            strings_expect.append(self[feature])
+        if os.path.exists(save_file):  # 存在，添加最新数据
+            # 读取历史数据，比较CREATION_DATE
+            data_frames = pd.read_csv(save_file)
+            if data_frames.loc[len(data_frames)-1, 'CREATION_DATE'] == self['CREATION_DATE']:  # 比较最近的creation time是否一致，若一致,不添加数据
+                pass
+            else:  # 不一致，添加数据
+                df_to_write = pd.DataFrame(data=[strings_expect], columns=features)
+                data_frames.append(df_to_write)
+                data_frames.to_csv(save_file)
+
+        else:  # 不存在，创建表格，并添加数据
+            df_to_write_ = pd.DataFrame(data=[strings_expect], columns=features)
+            df_to_write_.to_csv(save_file)
+
+    def xls(self, save_file):
+        # 写入对应xls表格
+        strings_expect = []
+        for i, feature in enumerate(features):
+            strings_expect.append(self[feature])
+        if os.path.exists(save_file):  # 存在，添加最新数据
+            # 读取历史数据，比较CREATION_DATE
+            data_frames = pd.read_excel(save_file)
+            if data_frames.loc[len(data_frames)-1, 'CREATION_DATE'] == self['CREATION_DATE']:  # 比较最近的creation time是否一致，若一致,不添加数据
+                pass
+            else:  # 不一致，添加数据
+                with ExcelWriter(save_file, mode="a", engine="openpyxl") as writer:
+                    df_to_write = pd.DataFrame(data=[strings_expect], columns=features)
+                    df_to_write.to_excel(writer, sheet_name="Sheet3")
+
+        else:  # 不存在，创建表格，并添加数据
+            df_to_write_ = pd.DataFrame(data=[strings_expect], columns=features)
+            df_to_write_.to_excel(save_file)
 
     def to_dataframe(self):
         data = self.to_dict()
         return pd.DataFrame(data, index=[0])
 
     def save(self, file_name):
-        content = self.kvn()
+        content = self.csv()
         with open(file_name, 'w') as f:
             f.write(content)
 
     def __hash__(self):
-        return hash(self.kvn(show_all=True))
+        return hash(self.csv())
 
     def __eq__(self, other):
         if isinstance(other, GeneralPerturbations):
@@ -205,7 +239,7 @@ class GeneralPerturbations():
             raise ValueError('Invalid key ({}) for relative metadata'.format(key))
 
     def __repr__(self):  # 实例化对象输出信息
-        return self.kvn()
+        return self.csv()
 
     def __getitem__(self, key):  # 建立类似字典访问结构
         return self.to_dict()[key]
